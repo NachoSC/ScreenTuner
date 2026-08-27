@@ -18,7 +18,7 @@ release has to exist first:
    ```
 5. Open a PR to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) placing
    these three files at
-   `manifests/n/Nachsilva/ScreenTuner/1.0.0/`.
+   `manifests/n/NachoSC/ScreenTuner/1.0.0/`.
 
 `wingetcreate update` automates steps 2-5 for later versions.
 

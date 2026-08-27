@@ -2,7 +2,7 @@
 
 <https://polyformproject.org/licenses/noncommercial/1.0.0>
 
-Required Notice: Copyright (c) 2026 Nacho (https://github.com/nachsilva/ScreenTuner)
+Required Notice: Copyright (c) 2026 NachoSC (https://github.com/NachoSC/ScreenTuner)
 
 ## Acceptance
 

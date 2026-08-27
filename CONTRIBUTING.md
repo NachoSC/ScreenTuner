@@ -35,7 +35,7 @@ a PR, and it can be implemented independently.
 No dependencies beyond Python 3.10+ on Windows. The app is pure `ctypes`.
 
 ```
-git clone https://github.com/nachsilva/ScreenTuner
+git clone https://github.com/NachoSC/ScreenTuner
 cd ScreenTuner
 python screentuner.py            # run from source, tray icon appears
 python screentuner.py --list     # monitors, current vibrance, resolved profiles

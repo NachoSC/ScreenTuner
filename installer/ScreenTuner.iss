@@ -13,7 +13,7 @@
 #define AppName        "ScreenTuner"
 #define AppVersion     "1.0.0"
 #define AppPublisher   "ScreenTuner"
-#define AppURL         "https://github.com/nachsilva/ScreenTuner"
+#define AppURL         "https://github.com/NachoSC/ScreenTuner"
 #define AppExe         "ScreenTuner.exe"
 
 [Setup]

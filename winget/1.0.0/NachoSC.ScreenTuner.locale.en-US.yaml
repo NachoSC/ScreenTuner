@@ -1,16 +1,16 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
-PackageIdentifier: Nachsilva.ScreenTuner
+PackageIdentifier: NachoSC.ScreenTuner
 PackageVersion: 1.0.0
 PackageLocale: en-US
-Publisher: Nacho
-PublisherUrl: https://github.com/nachsilva
-PublisherSupportUrl: https://github.com/nachsilva/ScreenTuner/issues
+Publisher: NachoSC
+PublisherUrl: https://github.com/NachoSC
+PublisherSupportUrl: https://github.com/NachoSC/ScreenTuner/issues
 PackageName: ScreenTuner
-PackageUrl: https://github.com/nachsilva/ScreenTuner
+PackageUrl: https://github.com/NachoSC/ScreenTuner
 License: PolyForm Noncommercial License 1.0.0
-LicenseUrl: https://github.com/nachsilva/ScreenTuner/blob/main/LICENSE.md
+LicenseUrl: https://github.com/NachoSC/ScreenTuner/blob/main/LICENSE.md
 Copyright: Copyright (c) 2026 Nacho
-ShortDescription: Hotkey-switchable digital vibrance, gamma, contrast and brightness profiles.
+ShortDescription: "Hotkey-switchable display profiles for Windows: NVIDIA digital vibrance, plus gamma, contrast and brightness on any GPU. Per-monitor, with live preview."
 Description: |-
   ScreenTuner puts the NVIDIA Control Panel's display sliders behind global hotkeys, as
   named profiles you can switch instantly without leaving a game. Digital vibrance goes
@@ -27,6 +27,6 @@ Tags:
   - nvidia
   - saturation
   - vibrance
-ReleaseNotesUrl: https://github.com/nachsilva/ScreenTuner/releases/tag/v1.0.0
+ReleaseNotesUrl: https://github.com/NachoSC/ScreenTuner/releases/tag/v1.0.0
 ManifestType: defaultLocale
 ManifestVersion: 1.6.0

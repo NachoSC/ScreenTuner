@@ -1,12 +1,17 @@
 # ScreenTuner
 
-**Digital vibrance, gamma, contrast and brightness as hotkey-switchable profiles.**
+**Hotkey-switchable display profiles for Windows: NVIDIA digital vibrance, plus
+gamma, contrast and brightness on any GPU. Per-monitor, with live preview.**
 
 The NVIDIA Control Panel's display sliders, except you can flip between named profiles
 instantly — mid-game, without alt-tabbing. Per-monitor, with a live-preview settings
 window and a watchdog that puts your profile back when a fullscreen game steals it.
 
 No dependencies, no runtime to install, no telemetry, no network access.
+
+If you came here looking for a *vibranceGUI alternative*: this does the same
+digital-vibrance job, and adds gamma/contrast/brightness (which work on any GPU),
+per-monitor profiles, and a settings window.
 
 ![The settings window](docs/settings.png)
 
@@ -15,13 +20,13 @@ No dependencies, no runtime to install, no telemetry, no network access.
 ## Install
 
 **Installer (recommended)** — grab `ScreenTuner-x.y.z-setup.exe` from
-[Releases](https://github.com/nachsilva/ScreenTuner/releases). Per-user, so there's no
+[Releases](https://github.com/NachoSC/ScreenTuner/releases). Per-user, so there's no
 admin prompt.
 
 **winget**
 
 ```powershell
-winget install Nachsilva.ScreenTuner
+winget install NachoSC.ScreenTuner
 ```
 
 **Portable** — download `ScreenTuner-x.y.z-portable.zip`, unzip anywhere, run

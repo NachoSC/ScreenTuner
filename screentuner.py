@@ -646,7 +646,7 @@ def startup_command():
 # --------------------------------------------------------------------------
 
 VERSION = "1.0.0"
-REPO_URL = "https://github.com/nachsilva/ScreenTuner"
+REPO_URL = "https://github.com/NachoSC/ScreenTuner"
 INSTALL_DIR = os.path.join(os.environ.get("LOCALAPPDATA", BASE_DIR),
                            "Programs", "ScreenTuner")
 UNINSTALL_KEY = (r"Software\Microsoft\Windows\CurrentVersion"
