@@ -1,0 +1,17 @@
+# build output
+/dist/
+/.build/
+/build/
+*.spec
+
+# generated at build time by make_icon.py
+icon.ico
+__pycache__/
+*.pyc
+
+# runtime state - yours, not the repo's
+profiles.json
+screentuner.log
+
+# local snapshots
+/backups/
