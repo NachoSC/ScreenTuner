@@ -165,24 +165,14 @@ enabled ignores gamma ramps altogether, though vibrance still works.
 On hybrid-graphics laptops, a panel wired to the integrated GPU won't get vibrance,
 because NVAPI doesn't enumerate it. Gamma still applies.
 
-### Roadmap: AMD saturation
+### Roadmap
 
-**AMD support for the saturation control is planned.** Right now digital vibrance is
-NVIDIA-only, because it goes through NVAPI — but AMD exposes an equivalent: the
-saturation slider in Radeon Software, reachable through the AMD Display Library
-(`ADL_Display_Color_Set` with `ADL_DL_COLOR_SATURATION`, or the newer ADLX). The plan is
-to detect the GPU at runtime and pick the right backend, exactly as the app already
-detects whether NVAPI is present at all.
+**AMD and Intel saturation is planned**, which also fixes hybrid-graphics laptops whose
+built-in panel is wired to the integrated GPU. So are **profiles that follow the running
+program** — launch Tarkov, get your Tarkov profile, without touching a hotkey.
 
-Everything else — gamma, contrast, brightness, per-monitor profiles, hotkeys, the
-watchdog — already works on AMD and Intel today, because those go through the GDI gamma
-ramp rather than a vendor API.
-
-Intel has no comparable public saturation API that I am aware of. If you know otherwise,
-please open an issue.
-
-If you have an AMD card and want to help test this when it lands, say so in an issue —
-the main obstacle is that I do not have AMD hardware to develop against.
+See [ROADMAP.md](ROADMAP.md). If you have AMD or Intel hardware and want to help test,
+please open an issue: the main obstacle is not having the hardware to develop against.
 
 ## How it works
 

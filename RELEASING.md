@@ -1,5 +1,33 @@
 # Releasing
 
+## When to cut a release
+
+Not every commit is a release. But **every release is a full one** — GitHub release,
+installer, portable zip and patch notes. Shipping a "release" people cannot install
+means nothing, and `winget upgrade` users would be stranded on it.
+
+| Bump | When | Example |
+| --- | --- | --- |
+| **Patch** `1.0.x` | Bug fixes only. Nothing you had configured behaves differently | `--config` popping a stray console window |
+| **Minor** `1.x.0` | New features. Existing `profiles.json` keeps working untouched | Per-app profiles; AMD support |
+| **Major** `x.0.0` | Something you configured now behaves differently | Moving the default hotkeys off `Ctrl+Alt` |
+
+"Breaking" here means breaking a *user's setup*, not an API: a default hotkey moving, a
+`profiles.json` key being renamed, a profile resolving differently than before.
+
+**Patch notes for every release, including patches.** A patch release is exactly when
+someone asks "what changed, and does it fix my problem?" The CHANGELOG entry is cheap;
+a confused user filing a duplicate issue is not.
+
+**One exception, for winget only.** Each winget submission is a PR into
+`microsoft/winget-pkgs` with review latency, so batching several trivial patches into one
+manifest update is reasonable. Publish the GitHub release immediately regardless — winget
+lagging by a patch is fine, users having no download is not.
+
+If a release fixes something that makes the app misbehave for a whole class of user — the
+AltGr clash did, for every non-US keyboard layout — ship it as its own release
+immediately rather than holding it for company.
+
 Steps that need your GitHub credentials, in order. `gh` is installed; authenticate once
 with `gh auth login` (browser flow) and the rest are one-liners.
 
