@@ -13,6 +13,6 @@ ReleaseDate: 2026-08-27
 Installers:
   - Architecture: x64
     InstallerUrl: https://github.com/NachoSC/ScreenTuner/releases/download/v1.0.0/ScreenTuner-1.0.0-setup.exe
-    InstallerSha256: B7CF60DC82955BB40F73852EECDB1BCFF98589BECFAA350FE4CA5CC375E90C2B
+    InstallerSha256: 14F04C86558372EB458CDD860CFC6E8B7DE4A488B16C3142F041FBFAD86BCB6F
 ManifestType: installer
 ManifestVersion: 1.6.0
