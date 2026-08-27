@@ -1,0 +1,59 @@
+name: Bug report
+description: Something does not work as described
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. The diagnostics report below answers most of what
+        would otherwise be a dozen follow-up questions, so please include it.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: |
+        Right-click the tray icon → **Copy diagnostics for a bug report**, then paste
+        here. Or run `ScreenTuner.exe --diagnostics` from a terminal.
+
+        It contains your Windows version, GPU, monitors and settings. It deliberately
+        does **not** include your username, home folder, machine name, or the contents
+        of your profiles — only their names.
+      render: text
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Was a game running?
+      options:
+        - "No, just the desktop"
+        - "Yes - exclusive fullscreen"
+        - "Yes - borderless windowed"
+        - "Yes - windowed"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: hdr
+    attributes:
+      label: Is HDR enabled on the affected monitor?
+      description: Settings → System → Display → HDR. Gamma ramps do not apply under HDR.
+      options: ["No", "Yes", "Not sure"]
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots, or steps to reproduce.

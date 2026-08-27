@@ -126,8 +126,8 @@ hotkey can drive two monitors differently**:
 }
 ```
 
-`{ "skip": true }` leaves a monitor untouched. Monitors match by vendor (`"AOC"`,
-`"BenQ"`), position (`"primary"`, `"secondary"`), index, EDID id, or adapter name.
+`{ "skip": true }` leaves a monitor untouched. Monitors match by vendor (`"Dell"`,
+`"LG"`), position (`"primary"`, `"secondary"`), index, EDID id, or adapter name.
 Prefer the first two — Windows renumbers adapter names over time.
 
 Run `ScreenTuner.exe --list` to see every monitor with all of its usable keys, plus each
@@ -164,6 +164,25 @@ enabled ignores gamma ramps altogether, though vibrance still works.
 
 On hybrid-graphics laptops, a panel wired to the integrated GPU won't get vibrance,
 because NVAPI doesn't enumerate it. Gamma still applies.
+
+### Roadmap: AMD saturation
+
+**AMD support for the saturation control is planned.** Right now digital vibrance is
+NVIDIA-only, because it goes through NVAPI — but AMD exposes an equivalent: the
+saturation slider in Radeon Software, reachable through the AMD Display Library
+(`ADL_Display_Color_Set` with `ADL_DL_COLOR_SATURATION`, or the newer ADLX). The plan is
+to detect the GPU at runtime and pick the right backend, exactly as the app already
+detects whether NVAPI is present at all.
+
+Everything else — gamma, contrast, brightness, per-monitor profiles, hotkeys, the
+watchdog — already works on AMD and Intel today, because those go through the GDI gamma
+ramp rather than a vendor API.
+
+Intel has no comparable public saturation API that I am aware of. If you know otherwise,
+please open an issue.
+
+If you have an AMD card and want to help test this when it lands, say so in an issue —
+the main obstacle is that I do not have AMD hardware to develop against.
 
 ## How it works
 
@@ -211,9 +230,25 @@ ScreenTuner.exe --install [DIR]     install, with Start Menu and Installed-apps 
 ScreenTuner.exe --uninstall         remove everything it registered
 ScreenTuner.exe --startup on        run at login (on/off/toggle/status)
 ScreenTuner.exe --pin-tray          pin the tray icon to the taskbar
+ScreenTuner.exe --diagnostics       scrubbed report for a bug report
 ```
 
 Run from a terminal, output goes to that terminal.
+
+## Reporting a bug
+
+Right-click the tray icon → **Copy diagnostics for a bug report**, and paste it into the
+issue. From a terminal, `ScreenTuner.exe --diagnostics` prints the same thing and writes
+`screentuner-diagnostics.txt` beside the exe.
+
+It includes your Windows version, GPU, monitors, resolutions, current vibrance levels and
+settings, plus the last 40 log lines. It deliberately **excludes** your username, home
+folder, machine name and the contents of your profiles — profile *names* only, since
+people put all sorts in those. Any path that does appear is reduced to `%LOCALAPPDATA%`
+form.
+
+The app also keeps a rolling `screentuner.log` next to the executable, which is where
+startup problems show up if the tray icon never appears.
 
 ## Building
 

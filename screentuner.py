@@ -323,7 +323,7 @@ DISPLAY_DEVICE_PRIMARY_DEVICE = 0x00000004
 ENUM_CURRENT_SETTINGS = -1
 RAMP = W.WORD * 256 * 3
 
-# PnP vendor codes from the EDID, so "AOCB403" can be shown (and matched) as "AOC".
+# PnP vendor codes from the EDID, so "DELA123" can be shown (and matched) as "Dell".
 PNP_VENDORS = {
     "AOC": "AOC", "BNQ": "BenQ", "BNR": "BenQ", "ACR": "Acer", "ACI": "Asus",
     "AUS": "Asus", "DEL": "Dell", "SAM": "Samsung", "SEC": "Samsung",
@@ -339,9 +339,9 @@ class Monitor:
 
     def __init__(self, index, adapter, gpu, edid, is_primary, dm):
         self.index = index                  # 1-based, enumeration order
-        self.adapter = adapter              # \\.\DISPLAY21 - the NVAPI/GDI join key
+        self.adapter = adapter              # \\.\DISPLAY1 - the NVAPI/GDI join key
         self.gpu = gpu
-        self.edid = edid                    # e.g. AOCB403
+        self.edid = edid                    # e.g. DELA123
         self.is_primary = is_primary
         self.width = dm.dmPelsWidth if dm else 0
         self.height = dm.dmPelsHeight if dm else 0
@@ -392,7 +392,7 @@ def discover_monitors():
             mon.cb = C.sizeof(mon)
             edid = ""
             if user32.EnumDisplayDevicesW(d.DeviceName, 0, C.byref(mon), 0):
-                # MONITOR\AOCB403\{guid}\0001  ->  AOCB403
+                # MONITOR\DELA123\{guid}\0001  ->  DELA123
                 parts = mon.DeviceID.split("\\")
                 if len(parts) > 1:
                     edid = parts[1]
@@ -862,6 +862,103 @@ def cmd_cleanup():
     return 0
 
 
+def _scrub(text):
+    """Strip the reporter's identity out of any path before it is shared."""
+    for var in ("USERPROFILE", "LOCALAPPDATA", "APPDATA", "TEMP"):
+        val = os.environ.get(var)
+        if val:
+            text = text.replace(val, f"%{var}%")
+    user = os.environ.get("USERNAME")
+    if user:
+        text = text.replace(user, "<user>")
+    return text
+
+
+def build_diagnostics(config_path=None):
+    """A report someone can paste into a bug report without leaking who they are.
+
+    Deliberately excludes: username, home directory, machine name, and the
+    contents of profiles.json (profile *names* only - people put all sorts in
+    those). Paths are reduced to environment-variable form."""
+    import platform
+    lines = []
+    add = lines.append
+
+    add(f"ScreenTuner {VERSION}")
+    add(f"frozen: {FROZEN}   python: {platform.python_version()}")
+    add(f"windows: {platform.platform()}")
+    add(f"install: {'yes' if os.path.exists(os.path.join(INSTALL_DIR, 'ScreenTuner.exe')) else 'portable/source'}")
+    add(f"run at login: {'yes' if startup_enabled() else 'no'}")
+    add(f"tray icon pinned: {'yes' if tray_icon_pinned() else 'no'}")
+    add("")
+
+    nv = NvApi()
+    add(f"NVAPI: {'available' if nv.ok else 'NOT available - vibrance disabled'}")
+    if nv.ok:
+        add(f"  vibrance range {nv.min}-{nv.max}, neutral {nv.default}, "
+            f"{len(nv.displays)} NVIDIA display(s)")
+    add("")
+
+    add("monitors:")
+    for m in discover_monitors():
+        vib = nv.get_level(nv.handle_for(m.adapter)) if nv.ok else None
+        add(f"  [{m.index}] {m.vendor or '?'} {m.edid or '?'} "
+            f"{m.width}x{m.height}@{m.refresh}Hz "
+            f"{'primary' if m.is_primary else 'secondary'} "
+            f"vibrance={vib if vib is not None else 'n/a'} gpu={m.gpu}")
+    add("")
+
+    try:
+        cfg = load_config(config_path or DEFAULT_CONFIG)
+        st = cfg.get("settings", {})
+        add(f"settings: {json.dumps(st, sort_keys=True)}")
+        add(f"profiles ({len(cfg.get('profiles', []))}): "
+            + ", ".join(p.get("name", "?") for p in cfg.get("profiles", [])))
+    except Exception as e:
+        add(f"config: could not read ({e})")
+    add("")
+
+    add("recent log:")
+    try:
+        with open(LOG_FILE, encoding="utf-8", errors="replace") as f:
+            tail = f.read().splitlines()[-40:]
+        add("\n".join("  " + t for t in tail) if tail else "  (empty)")
+    except OSError:
+        add("  (no log file yet)")
+
+    nv.unload()
+    return _scrub("\n".join(lines))
+
+
+def cmd_diagnostics():
+    report = build_diagnostics()
+    out = os.path.join(BASE_DIR, "screentuner-diagnostics.txt")
+    try:
+        with open(out, "w", encoding="utf-8") as f:
+            f.write(report)
+    except OSError:
+        out = None
+    print(report)
+    if out:
+        print(f"\nSaved to {out}")
+        print("Attach that file to your bug report. It contains no username, "
+              "home path or machine name.")
+    return 0
+
+
+def copy_diagnostics_to_clipboard():
+    """Tray-menu path: put the report on the clipboard and say so."""
+    import subprocess
+    report = build_diagnostics()
+    try:
+        subprocess.run(["clip"], input=report.encode("utf-16-le"),
+                       check=True, creationflags=0x08000000)
+        return True
+    except Exception as e:
+        log(f"  ! clipboard failed: {e}")
+        return False
+
+
 def _ask_keep_settings():
     try:
         import tkinter as tk
@@ -1149,6 +1246,7 @@ CMD_STARTUP = 904
 CMD_PIN = 905
 CMD_VIB_UP = 906
 CMD_VIB_DOWN = 907
+CMD_DIAG = 908
 
 # Menu id -> the same named action the hotkeys use, so both routes stay in step.
 MENU_ACTIONS = {
@@ -1160,6 +1258,7 @@ MENU_ACTIONS = {
     CMD_PIN: "pin",
     CMD_VIB_UP: "vibrance_up",
     CMD_VIB_DOWN: "vibrance_down",
+    CMD_DIAG: "diagnostics",
 }
 
 
@@ -1362,6 +1461,15 @@ class App:
                      "Icon moved back to the ^ overflow.")
                     + " Takes effect next start.")
 
+    def copy_diagnostics(self):
+        if copy_diagnostics_to_clipboard():
+            self.notify("Diagnostics copied",
+                        "Paste it into your bug report. No username, home path "
+                        "or machine name is included.")
+        else:
+            self.notify("Diagnostics", "Could not reach the clipboard - "
+                                       "run ScreenTuner.exe --diagnostics instead.")
+
     def save_settings(self):
         """Persist a settings-only change without disturbing the profiles."""
         try:
@@ -1385,6 +1493,7 @@ class App:
             "settings": self.open_settings,
             "startup": self.toggle_startup,
             "pin": self.toggle_pin,
+            "diagnostics": self.copy_diagnostics,
         }
 
     def on_hotkey(self, hid):
@@ -1522,6 +1631,7 @@ class App:
             None,
             item(CMD_SETTINGS, "Settings..."),
             item(CMD_RELOAD, acc("reload", "Reload profiles.json")),
+            item(CMD_DIAG, "Copy diagnostics for a bug report"),
             None,
             item(CMD_STARTUP, "Start with Windows", checked=bool(startup_enabled())),
             item(CMD_PIN, "Pin icon to taskbar", checked=tray_icon_pinned()),
@@ -1782,6 +1892,8 @@ def main():
                     help="remove ScreenTuner and everything it registered")
     ap.add_argument("--cleanup", action="store_true",
                     help="remove only the registry entries (used by the installer)")
+    ap.add_argument("--diagnostics", action="store_true",
+                    help="print a scrubbed report to attach to a bug report")
     ap.add_argument("--quiet", action="store_true",
                     help="with --uninstall: no prompts")
     ap.add_argument("--no-startup", action="store_true",
@@ -1803,6 +1915,9 @@ def main():
 
     if args.cleanup:
         return cmd_cleanup()
+
+    if args.diagnostics:
+        return cmd_diagnostics()
 
     if args.pin_tray:
         n = promote_tray_icon()
