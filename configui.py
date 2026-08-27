@@ -895,6 +895,12 @@ class ConfigWindow(tk.Tk):
         if clashes:
             self.hotkey_note.configure(text=f"also used by: {clashes[0]}",
                                        foreground=self.P["danger"])
+        elif sp.altgr_conflicts([(spec, spec)]) and sp.layout_has_altgr():
+            # Windows reports AltGr as Ctrl+Alt, so on these layouts a Ctrl+Alt
+            # binding fires while the user is just typing.
+            self.hotkey_note.configure(
+                text="AltGr types this on your layout - prefer Ctrl+Shift",
+                foreground=self.P["danger"])
         else:
             self.hotkey_note.configure(text="", foreground=self.P["subtle"])
 

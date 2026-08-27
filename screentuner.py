@@ -523,6 +523,55 @@ VK_NAMES = {
 }
 
 
+VK_LMENU, VK_RMENU = 0xA4, 0xA5
+_ALTGR_LAYOUT = None
+
+
+def layout_has_altgr():
+    """True if the current keyboard layout produces characters with AltGr.
+
+    Windows implements AltGr as Ctrl+Alt, so on these layouts a Ctrl+Alt hotkey
+    fires while the user is simply typing. On a Spanish layout AltGr+2 types
+    '@', which would otherwise trigger a Ctrl+Alt+2 hotkey.
+
+    VkKeyScanEx reports the modifiers a character needs in its high byte:
+    bit 1 = Ctrl, bit 2 = Alt. Both set together means AltGr."""
+    global _ALTGR_LAYOUT
+    if _ALTGR_LAYOUT is not None:
+        return _ALTGR_LAYOUT
+    try:
+        user32.GetKeyboardLayout.restype = W.HKL
+        user32.VkKeyScanExW.restype = C.c_short
+        user32.VkKeyScanExW.argtypes = [W.WCHAR, W.HKL]
+        hkl = user32.GetKeyboardLayout(0)
+        _ALTGR_LAYOUT = any(
+            (user32.VkKeyScanExW(chr(cp), hkl) != -1
+             and (user32.VkKeyScanExW(chr(cp), hkl) >> 8) & 0x06 == 0x06)
+            for cp in list(range(33, 127)) + list(range(160, 256)))
+    except Exception:
+        _ALTGR_LAYOUT = False
+    return _ALTGR_LAYOUT
+
+
+def altgr_conflicts(hotkeys):
+    """Which of these hotkey strings would fire when the user types with AltGr."""
+    out = []
+    for label, spec in hotkeys:
+        parsed = parse_hotkey(spec)
+        if parsed and (parsed[0] & MOD_CONTROL) and (parsed[0] & MOD_ALT):
+            out.append((label, spec))
+    return out
+
+
+def altgr_is_down():
+    """AltGr is the right Alt plus a synthetic left Ctrl. A genuine Ctrl+Alt
+    chord uses the left Alt, so the two are distinguishable once the keys are
+    down - even though RegisterHotKey cannot separate them at registration."""
+    right = user32.GetAsyncKeyState(VK_RMENU) & 0x8000
+    left = user32.GetAsyncKeyState(VK_LMENU) & 0x8000
+    return bool(right and not left)
+
+
 def parse_hotkey(spec):
     """'ctrl+alt+1' -> (modifiers, vk). Returns None if unparseable."""
     if not spec:
@@ -570,25 +619,25 @@ DEFAULT_PROFILES = {
         "vibrance_step": 5
     },
     "hotkeys": {
-        "neutral": "ctrl+alt+0",
-        "cycle": "ctrl+alt+v",
-        "vibrance_up": "ctrl+alt+=",
-        "vibrance_down": "ctrl+alt+-",
-        "reload": "ctrl+alt+f5",
-        "quit": "ctrl+alt+q"
+        "neutral": "ctrl+shift+0",
+        "cycle": "ctrl+shift+v",
+        "vibrance_up": "ctrl+shift+=",
+        "vibrance_down": "ctrl+shift+-",
+        "reload": "ctrl+shift+f5",
+        "quit": "ctrl+shift+q"
     },
     "profiles": [
-        {"name": "Neutral", "hotkey": "ctrl+alt+1",
+        {"name": "Neutral", "hotkey": "ctrl+shift+1",
          "vibrance": 50, "gamma": 1.00, "contrast": 50, "brightness": 50},
-        {"name": "Competitive FPS", "hotkey": "ctrl+alt+2",
+        {"name": "Competitive FPS", "hotkey": "ctrl+shift+2",
          "vibrance": 80, "gamma": 1.10, "contrast": 55, "brightness": 54},
-        {"name": "Vivid", "hotkey": "ctrl+alt+3",
+        {"name": "Vivid", "hotkey": "ctrl+shift+3",
          "vibrance": 100, "gamma": 1.00, "contrast": 56, "brightness": 50},
-        {"name": "Movie", "hotkey": "ctrl+alt+4",
+        {"name": "Movie", "hotkey": "ctrl+shift+4",
          "vibrance": 62, "gamma": 0.95, "contrast": 52, "brightness": 48},
-        {"name": "Night / dark room", "hotkey": "ctrl+alt+5",
+        {"name": "Night / dark room", "hotkey": "ctrl+shift+5",
          "vibrance": 55, "gamma": 1.25, "contrast": 46, "brightness": 43},
-        {"name": "Focus (dim the second screen)", "hotkey": "ctrl+alt+6",
+        {"name": "Focus (dim the second screen)", "hotkey": "ctrl+shift+6",
          "vibrance": 55, "gamma": 1.00, "contrast": 50, "brightness": 50,
          "monitors": {
              "secondary": {"vibrance": 42, "brightness": 38, "contrast": 46}
@@ -1274,6 +1323,7 @@ class App:
         self._hotkey_ids = {}
         self._next_id = 1
         self._shutdown_done = False
+        self._warned_altgr = False
         self._expected_vib = {}      # adapter -> level the driver reported back
         self._expected_ramp = {}     # adapter -> ramp the driver reported back
         self._hook = None
@@ -1414,7 +1464,7 @@ class App:
             hid = self._next_id
             self._next_id += 1
             if user32.RegisterHotKey(self.hwnd, hid, mods, vk):
-                self._hotkey_ids[hid] = action
+                self._hotkey_ids[hid] = (action, mods)
                 log(f"  {spec:<18} {label}")
             else:
                 err = C.get_last_error()
@@ -1497,9 +1547,24 @@ class App:
         }
 
     def on_hotkey(self, hid):
-        action = self._hotkey_ids.get(hid)
-        if not action:
+        entry = self._hotkey_ids.get(hid)
+        if not entry:
             return
+        action, mods = entry
+
+        # On an AltGr layout Windows reports AltGr as Ctrl+Alt, so this may be
+        # someone typing '@' rather than asking for a profile. Suppress only
+        # when the right Alt is down and the left is not: that is AltGr.
+        if (mods & MOD_CONTROL) and (mods & MOD_ALT) and layout_has_altgr() \
+                and altgr_is_down():
+            if not self._warned_altgr:
+                self._warned_altgr = True
+                log("  ! Ignoring AltGr. Your keyboard layout types characters "
+                    "with it, and Windows reports AltGr as Ctrl+Alt.")
+                log("    Rebind to Ctrl+Shift+... in Settings to avoid the clash "
+                    "entirely.")
+            return
+
         kind, arg = action
         if kind == "profile":
             self.toggle_profile(arg)
@@ -1775,8 +1840,23 @@ class App:
             log(f"  keep-applied: every {every} ms, and on every alt-tab")
         log("\nHotkeys:")
         self.register_hotkeys()
-        log("\nRunning. Tray icon: left-click opens Settings, right-click the menu. "
-            "Ctrl+C or Ctrl+Alt+Q to quit.\n")
+
+        if layout_has_altgr():
+            pairs = [(p.get("name", "?"), p["hotkey"])
+                     for p in self.cfg["profiles"] if p.get("hotkey")]
+            pairs += [(k, v) for k, v in self.cfg.get("hotkeys", {}).items() if v]
+            clashes = altgr_conflicts(pairs)
+            if clashes:
+                log(f"\n  ! Your keyboard layout has AltGr, and Windows reports "
+                    f"AltGr as Ctrl+Alt, so {len(clashes)} binding(s) would fire "
+                    f"while you type:")
+                for label, spec in clashes:
+                    log(f"      {spec:<18} {label}")
+                log("    They are suppressed when AltGr is the key actually held, "
+                    "but Ctrl+Shift+... is a cleaner fix.")
+        quit_key = self.cfg.get("hotkeys", {}).get("quit") or "the tray menu"
+        log(f"\nRunning. Tray icon: left-click opens Settings, right-click "
+            f"the menu. Quit with {quit_key}.\n")
         self.notify(f"{APP_NAME} is running",
                     "It lives in the tray - left-click for Settings, "
                     "right-click for the profile menu.")
@@ -1870,9 +1950,17 @@ def cmd_enable_full_gamma_range():
     return 0
 
 
+# Arguments that produce console output. Everything else (--config, --no-tray,
+# --gui) is a tray-mode modifier and must not conjure a console window.
+CONSOLE_ARGS = {
+    "-h", "--help", "--list", "--apply", "--reset", "--startup", "--diagnostics",
+    "--install", "--uninstall", "--cleanup", "--pin-tray",
+    "--enable-full-gamma-range",
+}
+
+
 def main():
-    # Any CLI argument means someone ran us from a terminal and wants to see output.
-    if len(sys.argv) > 1 and "--gui" not in sys.argv:
+    if any(a.split("=", 1)[0] in CONSOLE_ARGS for a in sys.argv[1:]):
         attach_console()
 
     ap = argparse.ArgumentParser(

@@ -57,12 +57,12 @@ job, or picking one from the menu.
 
 | Hotkey | Action |
 | --- | --- |
-| `Ctrl+Alt+1` … `Ctrl+Alt+6` | Apply profile 1–6 |
-| `Ctrl+Alt+0` | Back to driver defaults |
-| `Ctrl+Alt+V` | Cycle to the next profile |
-| `Ctrl+Alt+=` / `Ctrl+Alt+-` | Nudge vibrance ±5 |
-| `Ctrl+Alt+F5` | Reload `profiles.json` |
-| `Ctrl+Alt+Q` | Quit |
+| `Ctrl+Shift+1` … `Ctrl+Shift+6` | Apply profile 1–6 |
+| `Ctrl+Shift+0` | Back to driver defaults |
+| `Ctrl+Shift+V` | Cycle to the next profile |
+| `Ctrl+Shift+=` / `Ctrl+Shift+-` | Nudge vibrance ±5 |
+| `Ctrl+Shift+F5` | Reload `profiles.json` |
+| `Ctrl+Shift+Q` | Quit |
 
 Pressing an active profile's own hotkey again returns to neutral, so every profile
 doubles as an on/off toggle. All bindings are editable.
@@ -217,6 +217,15 @@ to care.
 - **HDR ignores gamma ramps** entirely. Vibrance still works.
 - The tray icon starts in the `^` overflow, where Windows 11 puts new icons. There's a
   **Pin icon to taskbar** toggle in the tray menu.
+- **AltGr is Ctrl+Alt as far as Windows is concerned.** On layouts that use AltGr to
+  type characters — Spanish, German, most non-US layouts — a `Ctrl+Alt+…` binding fires
+  while you are simply typing. On a Spanish layout `AltGr+2` types `@`, which would
+  otherwise trigger `Ctrl+Alt+2`.
+
+  Defaults are therefore `Ctrl+Shift+…`, which has no such clash anywhere. If you do bind
+  something to `Ctrl+Alt`, ScreenTuner detects whether your layout has AltGr and ignores
+  the hotkey when the key actually held is the right Alt — that is AltGr rather than a
+  genuine Ctrl+Alt chord. It also warns you at startup and in the settings window.
 
 ## Command line
 
