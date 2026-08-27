@@ -11,7 +11,12 @@
 ; Build with:  build-installer.bat
 
 #define AppName        "ScreenTuner"
-#define AppVersion     "1.0.0"
+; Passed in by build-installer.bat as /DAppVersion=x.y.z, derived from
+; screentuner.py so the version lives in exactly one place. The fallback
+; exists only so the script still compiles if opened directly in the IDE.
+#ifndef AppVersion
+  #define AppVersion "0.0.0-dev"
+#endif
 #define AppPublisher   "ScreenTuner"
 #define AppURL         "https://github.com/NachoSC/ScreenTuner"
 #define AppExe         "ScreenTuner.exe"

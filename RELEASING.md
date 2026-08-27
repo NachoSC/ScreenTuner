@@ -56,8 +56,19 @@ the three files under `manifests/n/NachoSC/ScreenTuner/1.0.0/`.
 
 ## Version bumps
 
-The version lives in three places and they must agree:
+`VERSION` in `screentuner.py` is the single source of truth. Everything else derives
+from it or is updated by the tool - never edit versions by hand.
 
-- `VERSION` in `screentuner.py`
-- `AppVersion` in `installer\ScreenTuner.iss`
-- `PackageVersion` in all three winget manifests, and the folder name under `winget\`
+```powershell
+python toolsersion.py                 # what is the current version
+python toolsersion.py --check         # verify every file agrees
+python toolsersion.py --set 1.1.0     # bump everywhere, add a CHANGELOG stub
+python toolsersion.py --tag           # annotated git tag, refuses if inconsistent
+```
+
+`--set` updates `screentuner.py`, all three winget manifests, the `winget\<version>\`
+folder name, the release URLs inside those manifests, and adds a CHANGELOG heading. The
+installer reads the version at compile time via `/DAppVersion`, so there is nothing to
+change in the `.iss`.
+
+`build-installer.bat` runs `--check` first and refuses to build if anything disagrees.

@@ -1953,7 +1953,7 @@ def cmd_enable_full_gamma_range():
 # Arguments that produce console output. Everything else (--config, --no-tray,
 # --gui) is a tray-mode modifier and must not conjure a console window.
 CONSOLE_ARGS = {
-    "-h", "--help", "--list", "--apply", "--reset", "--startup", "--diagnostics",
+    "-h", "--help", "--version", "--list", "--apply", "--reset", "--startup", "--diagnostics",
     "--install", "--uninstall", "--cleanup", "--pin-tray",
     "--enable-full-gamma-range",
 }
@@ -1982,6 +1982,8 @@ def main():
                     help="remove only the registry entries (used by the installer)")
     ap.add_argument("--diagnostics", action="store_true",
                     help="print a scrubbed report to attach to a bug report")
+    ap.add_argument("--version", action="version",
+                    version=f"ScreenTuner {VERSION}")
     ap.add_argument("--quiet", action="store_true",
                     help="with --uninstall: no prompts")
     ap.add_argument("--no-startup", action="store_true",
