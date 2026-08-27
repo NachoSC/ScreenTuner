@@ -14,7 +14,7 @@ if not exist ".build\venv\Scripts\python.exe" (
 )
 
 echo Generating icon...
-python make_icon.py || goto :fail
+python src\make_icon.py || goto :fail
 
 echo Building...
 ".build\venv\Scripts\python.exe" -m PyInstaller --noconfirm --clean ^
@@ -23,8 +23,9 @@ echo Building...
   --icon "%~dp0icon.ico" ^
   --add-data "%~dp0icon.ico;." ^
   --hidden-import configui ^
+  --paths src ^
   --distpath dist --workpath ".build\work" --specpath ".build" ^
-  screentuner.py || goto :fail
+  src\screentuner.py || goto :fail
 
 echo.
 echo Done: %~dp0dist\ScreenTuner\ScreenTuner.exe

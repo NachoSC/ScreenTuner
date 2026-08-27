@@ -493,7 +493,7 @@ class GammaController:
             ok |= self._write(name, cache[key])
         if not ok:
             log("  ! Windows rejected the gamma ramp (values too extreme?). "
-                "Try 'python screentuner.py --enable-full-gamma-range' as admin.")
+                "Try 'python src/screentuner.py --enable-full-gamma-range' as admin.")
         return ok
 
     def restore_baseline(self):

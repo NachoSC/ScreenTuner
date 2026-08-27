@@ -7,7 +7,7 @@ cd /d "%~dp0"
 
 for /f %%v in ('python tools\version.py') do set "VER=%%v"
 if not defined VER (
-  echo Could not read the version from screentuner.py
+  echo Could not read the version from src\screentuner.py
   exit /b 1
 )
 echo Version %VER%

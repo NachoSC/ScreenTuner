@@ -3,13 +3,16 @@
 The mark: a rounded square running from flat grey on the left to fully saturated
 blue-cyan on the right. That is literally what the app does to your screen.
 
-Run: python make_icon.py
+Run: python src/make_icon.py
 """
 
 import os
 import struct
 
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.ico")
+# Written to the repo root, not beside this script: the installer and the
+# PyInstaller --add-data both reference it from there.
+OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                   "icon.ico")
 SIZES = (16, 24, 32, 48, 64, 128, 256)
 
 # left (desaturated) -> right (vivid), sampled top and bottom for a slight gradient

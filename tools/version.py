@@ -1,6 +1,6 @@
 """Single source of truth for the version number.
 
-`VERSION` in screentuner.py is authoritative - the app has to know its own version
+`VERSION` in src/screentuner.py is authoritative - the app has to know its own version
 anyway, so everything else derives from it. This script keeps the other places in
 step and shouts if they have drifted.
 
@@ -18,7 +18,7 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-APP = os.path.join(ROOT, "screentuner.py")
+APP = os.path.join(ROOT, "src", "screentuner.py")
 WINGET = os.path.join(ROOT, "winget")
 CHANGELOG = os.path.join(ROOT, "CHANGELOG.md")
 SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
@@ -35,7 +35,7 @@ def write(path, text):
 def current():
     m = re.search(r'^VERSION = "([^"]+)"', read(APP), re.MULTILINE)
     if not m:
-        sys.exit("could not find VERSION in screentuner.py")
+        sys.exit("could not find VERSION in src/screentuner.py")
     return m.group(1)
 
 
@@ -52,7 +52,7 @@ def check(verbose=True):
     """Report every place the version appears and whether it matches."""
     want = current()
     problems = []
-    found = [("screentuner.py VERSION", want, True)]
+    found = [("src/screentuner.py VERSION", want, True)]
 
     wdir = winget_dir()
     if wdir is None:
@@ -97,7 +97,7 @@ def set_version(new):
     s = re.sub(r'^VERSION = "[^"]+"', f'VERSION = "{new}"', s, count=1,
                flags=re.MULTILINE)
     write(APP, s)
-    print(f"  screentuner.py     {old} -> {new}")
+    print(f"  src/screentuner.py {old} -> {new}")
 
     wdir = winget_dir()
     if wdir:

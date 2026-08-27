@@ -37,9 +37,9 @@ No dependencies beyond Python 3.10+ on Windows. The app is pure `ctypes`.
 ```
 git clone https://github.com/NachoSC/ScreenTuner
 cd ScreenTuner
-python screentuner.py            # run from source, tray icon appears
-python screentuner.py --list     # monitors, current vibrance, resolved profiles
-python screentuner.py --gui      # settings window
+python src\screentuner.py            # run from source, tray icon appears
+python src\screentuner.py --list     # monitors, current vibrance, resolved profiles
+python src\screentuner.py --gui      # settings window
 ```
 
 To build the exe and the installer:
