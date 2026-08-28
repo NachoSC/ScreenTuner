@@ -1,3 +1,9 @@
+# private working notes - steering context, conventions, machine-specific traps.
+# Deliberately not shared: this is the working agreement, not project documentation.
+# Anything here that contributors need belongs in CONTRIBUTING.md or RELEASING.md instead.
+/CLAUDE.md
+/.claude/
+
 # build output
 /dist/
 /.build/
