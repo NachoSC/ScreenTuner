@@ -263,6 +263,17 @@ your global Python alone. The build is `--onedir` deliberately: `--onefile` unpa
 into `%TEMP%` on every launch, which costs ~0.5 s of startup, trips antivirus heuristics,
 and leaves the folder behind whenever the process is killed rather than closed.
 
+## Tests
+
+```
+testsun.bat unit      pure logic - any Windows machine, no GPU or build needed
+testsun.bat system    real displays, real hotkeys, real install/uninstall
+```
+
+The split is by what a machine can answer rather than by test size, so someone without an
+NVIDIA card can still check profile resolution, hotkey parsing and the gamma maths.
+Details in [tests/README.md](tests/README.md).
+
 ## Contributing
 
 Pull requests welcome — please read [CONTRIBUTING.md](CONTRIBUTING.md) first, especially

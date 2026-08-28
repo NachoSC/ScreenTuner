@@ -13,6 +13,10 @@ __pycache__/
 profiles.json
 screentuner.log
 
+# scratch configs the system tests write next to themselves
+/tests/system/test_profiles.json
+/tests/system/menu_test.json
+
 # local snapshots
 /backups/
 

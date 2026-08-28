@@ -101,10 +101,10 @@ what the donations would be for first.
 - **Import/export profiles**, so people can share tuned settings for particular games.
 - **Per-profile HDR awareness** — currently gamma silently has no effect on an HDR
   monitor. The app can detect this and say so rather than leaving people puzzled.
-- **A proper test runner.** The suite exists but lives outside the repo and is driven by
-  hand. It needs to be checked in and made runnable in one command. Several of these
-  tests drive real hotkeys and change the display, so they cannot run on a CI box — but
-  they should at least be reproducible locally.
+- **CI for the unit layer.** `tests/unit/` needs nothing but Windows and a Python, so it
+  could run on every push against a hosted runner. `tests/system/` never will - it takes
+  over the display and sends keystrokes - so the interesting question is how much more of
+  the app can be pulled into the layer a machine can check unattended.
 - **Nuitka build**, as an alternative to PyInstaller: smaller, faster to start, and fewer
   antivirus false positives. Worth measuring before committing to it.
 

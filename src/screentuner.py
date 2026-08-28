@@ -574,11 +574,12 @@ def altgr_is_down():
 
 def parse_hotkey(spec):
     """'ctrl+alt+1' -> (modifiers, vk). Returns None if unparseable."""
+    spec = str(spec or "").lower().replace(" ", "")
     if not spec:
         return None
     mods = 0
     key = None
-    for part in str(spec).lower().replace(" ", "").split("+"):
+    for part in spec.split("+"):
         if not part:
             key = "+"          # a literal '+' between separators
             continue

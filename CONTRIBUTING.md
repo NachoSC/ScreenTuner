@@ -63,15 +63,24 @@ are worth keeping:
   from the hardware, then restore. The existing tests all work that way.
 - Keep it dependency-free. The zero-install story is a feature.
 
-## What gets tested
+## Tests
 
-There is no CI yet. Before submitting, please check the paths your change touches, and
-say in the PR what you actually ran. Manual checks that matter:
+```bat
+testsun.bat unit      :: pure logic - no GPU, no build, about a second
+testsun.bat system    :: real hardware, asks before it starts
+```
 
-- Apply a profile, read back vibrance and the gamma ramp, restore — nothing left changed
-- Hotkeys still register and fire
-- Settings window opens, previews live, and saves valid JSON
-- `--install` then `--uninstall` leaves no registry entries or files behind
+The split is by what a machine can answer, not by test size: `tests/unit/` runs anywhere
+Windows runs, `tests/system/` needs a real display and, for vibrance, an NVIDIA card.
+See [tests/README.md](tests/README.md).
+
+**Please run `testsun.bat unit` before submitting** - it is fast and it covers profile
+resolution, hotkey parsing, config handling and the gamma maths.
+
+If you have no NVIDIA card, that is the whole of what you can run, and that is fine. Say
+so in the PR rather than skipping quietly. There is no CI yet; several system tests take
+over the display and send keystrokes, so they will never run on a hosted runner, but the
+unit layer could and should.
 
 ## Reporting bugs
 

@@ -9,6 +9,20 @@ key being renamed — not an API change.
 
 <!-- next -->
 
+## Unreleased
+
+### Added
+
+- A checked-in test suite under `tests/`, split into `unit/` (pure logic - runs on any
+  Windows machine, no GPU or build required) and `system/` (needs real displays).
+  `testsun.bat unit` runs 87 tests in about a second.
+
+### Fixed
+
+- A hotkey of nothing but whitespace, such as `"hotkey": " "` in a hand-edited
+  `profiles.json`, was parsed as the `+` key and silently registered globally, so
+  pressing `+` anywhere switched profiles. It is now rejected like any other empty value.
+
 
 ## 1.0.0 - 2026-08-28
 
