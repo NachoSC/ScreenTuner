@@ -18,6 +18,10 @@ LNK_GROUP = os.path.join(os.environ["APPDATA"], "Microsoft", "Windows",
                          "Start Menu", "Programs", "ScreenTuner")
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 
+import _install_state
+
+_state = _install_state.snapshot()
+
 fails = []
 
 
@@ -123,5 +127,10 @@ check(f"only profiles.json survives a silent uninstall ({leftovers})",
       leftovers in ([], ["profiles.json"]))
 
 kill()
+# Put the machine back before reporting, whatever happened above. Running the
+# suite must not leave someone without the app they had installed.
+if not _install_state.restore(_state):
+    fails.append("could not restore the pre-existing install")
+
 print("\nRESULT:", "ALL PASS" if not fails else f"{len(fails)} FAILED: {fails}")
 sys.exit(1 if fails else 0)

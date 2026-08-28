@@ -9,6 +9,16 @@ key being renamed — not an API change.
 
 <!-- next -->
 
+## Unreleased
+
+### Fixed
+
+- The install and wizard system tests uninstalled ScreenTuner and never put it back, so
+  running the suite removed the app from the machine it was run on. Both now snapshot the
+  existing install — files, `profiles.json` and run-at-login — and restore it
+  afterwards, reinstalling through the wizard if that is how it was installed. Affects
+  contributors running the tests, not users.
+
 ## 1.0.1 - 2026-08-28
 
 A bug fix and the test suite. Nothing you have configured changes.

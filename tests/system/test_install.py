@@ -17,6 +17,10 @@ UNINST = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\ScreenTuner"
 LNK = os.path.join(os.environ["APPDATA"], "Microsoft", "Windows", "Start Menu",
                    "Programs", "ScreenTuner.lnk")
 
+import _install_state
+
+_state = _install_state.snapshot()
+
 fails = []
 
 
@@ -108,6 +112,11 @@ check("process stopped", subprocess.run(
     ["powershell", "-NoProfile", "-Command",
      "[bool](Get-Process ScreenTuner -EA SilentlyContinue)"],
     capture_output=True, text=True).stdout.strip() == "False")
+
+# Put the machine back before reporting, whatever happened above. Running the
+# suite must not leave someone without the app they had installed.
+if not _install_state.restore(_state):
+    fails.append("could not restore the pre-existing install")
 
 print("\nRESULT:", "ALL PASS" if not fails else f"{len(fails)} FAILED: {fails}")
 sys.exit(1 if fails else 0)

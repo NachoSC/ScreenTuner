@@ -73,6 +73,23 @@ reason the app works; they just cannot run anywhere but a real desktop.
 They are unavoidably order-dependent and share the display, so `run.bat` runs them in
 sequence — cheapest first, the two that install software last.
 
+### They put your install back
+
+`test_install.py` and `test_wizard.py` drive the **real** per-user install — the actual
+`%LOCALAPPDATA%\Programs\ScreenTuner`, Run key and uninstall entry — because a copy
+installed somewhere else would not prove the thing under test works. They finish by
+uninstalling, which once removed the app from the developer's own machine with no
+explanation: it simply vanished, and took a diagnosis to trace back to a test run.
+
+So both bracket themselves with `_install_state.py`. It records whether an install was
+present, how it got there, its `profiles.json` and the run-at-login value, and puts all of
+it back afterwards — reinstalling through the wizard if that is how it was installed, so
+the uninstaller does not silently disappear. This runs whether the test passed, failed or
+raised, and a failed restore is itself a test failure.
+
+If `dist\` is empty there is nothing to reinstall from, so the tests say so loudly rather
+than leaving you to find out later.
+
 ## If you are contributing without an NVIDIA card
 
 Run `tests\run.bat unit`. It covers profile resolution, hotkey parsing, config handling

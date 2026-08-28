@@ -38,7 +38,8 @@ echo.
 echo These drive the real display and the real desktop. They will:
 echo   - change your gamma, contrast and vibrance, briefly
 echo   - move the mouse pointer and send keystrokes
-echo   - install and uninstall ScreenTuner for the current user
+echo   - uninstall ScreenTuner, then put your install back afterwards
+echo     ^(files, profiles.json and run-at-login are restored^)
 echo.
 echo Close anything you would rather not have typed into first.
 echo Your own profiles.json is not touched.
