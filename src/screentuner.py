@@ -695,7 +695,7 @@ def startup_command():
 # Install / uninstall - one implementation; the wizard and winget both call it
 # --------------------------------------------------------------------------
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 REPO_URL = "https://github.com/NachoSC/ScreenTuner"
 INSTALL_DIR = os.path.join(os.environ.get("LOCALAPPDATA", BASE_DIR),
                            "Programs", "ScreenTuner")

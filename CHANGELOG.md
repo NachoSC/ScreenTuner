@@ -9,20 +9,29 @@ key being renamed — not an API change.
 
 <!-- next -->
 
-## Unreleased
+## 1.0.1 - 2026-08-28
 
-### Added
-
-- A checked-in test suite under `tests/`, split into `unit/` (pure logic - runs on any
-  Windows machine, no GPU or build required) and `system/` (needs real displays).
-  `testsun.bat unit` runs 87 tests in about a second.
+A bug fix and the test suite. Nothing you have configured changes.
 
 ### Fixed
 
-- A hotkey of nothing but whitespace, such as `"hotkey": " "` in a hand-edited
-  `profiles.json`, was parsed as the `+` key and silently registered globally, so
-  pressing `+` anywhere switched profiles. It is now rejected like any other empty value.
+- A hotkey consisting only of whitespace, such as `"hotkey": " "` in a hand-edited
+  `profiles.json`, was parsed as the `+` key and registered globally - so pressing `+`
+  anywhere switched profiles. It is now rejected like any other empty value.
 
+### Added
+
+- A test suite under `tests/`, split by what a machine can answer rather than by test
+  size. `tests/unit/` needs nothing but Windows - no GPU, no build, no install - and
+  covers the gamma ramp maths, hotkey parsing, monitor matching, profile resolution,
+  config loading, and the privacy scrubbing on `--diagnostics`. `tests/system/` holds the
+  hardware tests, which need real displays and, for vibrance, an NVIDIA card.
+- `tests\run.bat` runs either layer, or both.
+
+### Changed
+
+- Contributors are asked to use [Conventional Commits](https://www.conventionalcommits.org),
+  since the commit type is what decides the next version number.
 
 ## 1.0.0 - 2026-08-28
 
