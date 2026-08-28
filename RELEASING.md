@@ -53,15 +53,31 @@ Then set the About text and topics (see README's description section).
 
 ## 3. Cut a release
 
+Version numbers below are written `x.y.z` on purpose - copy them with the real version
+substituted, or they will drift the way the 1.0.0 examples did.
+
+**First, rewrite `RELEASE-NOTES.md`.** It is passed verbatim to `--notes-file`, so
+whatever is in it becomes the release page. It holds the *previous* release's notes until
+you replace them - shipping those unnoticed is the easy mistake here. Write it for the
+person deciding whether to upgrade: what changed, whether their config still works, and
+how to upgrade. `CHANGELOG.md` is the complete record; these notes are the summary.
+
 ```powershell
+python tools\version.py --set x.y.z   # bump everywhere, add a CHANGELOG stub
+# edit CHANGELOG.md and RELEASE-NOTES.md
 .\build-installer.bat                 # always rebuild: it also rebuilds the app
-git tag v1.0.0
-git push origin v1.0.0
-gh release create v1.0.0 `
-    "dist\installer\ScreenTuner-1.0.0-setup.exe" `
-    "dist\installer\ScreenTuner-1.0.0-portable.zip" `
-    --title "ScreenTuner 1.0.0" --notes-file RELEASE-NOTES.md
+python tools\version.py --tag         # annotated tag, refuses if anything disagrees
+git push origin main
+git push origin vx.y.z
+gh release create vx.y.z `
+    "dist\installer\ScreenTuner-x.y.z-setup.exe" `
+    "dist\installer\ScreenTuner-x.y.z-portable.zip" `
+    --title "ScreenTuner x.y.z" --notes-file RELEASE-NOTES.md
 ```
+
+`dist\installer\` keeps every version you have ever built, so check you are attaching
+the right pair - and delete the stale ones, since `tests\system\test_wizard.py` picks
+the newest file it can find there.
 
 ## 4. Refresh the winget hash, then submit
 
@@ -69,18 +85,22 @@ The manifest pins the installer's SHA256, so **rebuilding invalidates it**. Reco
 against the exact file you uploaded:
 
 ```powershell
-(Get-FileHash .\dist\installer\ScreenTuner-1.0.0-setup.exe -Algorithm SHA256).Hash
+(Get-FileHash .\dist\installer\ScreenTuner-x.y.z-setup.exe -Algorithm SHA256).Hash
 ```
 
-Paste it into `winget\1.0.0\NachoSC.ScreenTuner.installer.yaml`, then:
+Paste it into `winget\x.y.z\NachoSC.ScreenTuner.installer.yaml` - the value must be 64
+hex characters, so check it is not empty before committing. Then:
 
 ```powershell
-winget validate --manifest .\winget\1.0.0
-winget install --manifest .\winget\1.0.0     # test it locally first
+winget validate --manifest .\winget\x.y.z
+winget install --manifest .\winget\x.y.z    # test it locally first
 ```
 
 Then open a PR to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) with
-the three files under `manifests/n/NachoSC/ScreenTuner/1.0.0/`.
+the three files under `manifests/n/NachoSC/ScreenTuner/x.y.z/`.
+
+The manifest's `InstallerUrl` points at the release download, so **publish the GitHub
+release before submitting** or the PR's automated validation will fail on a 404.
 
 ## Version bumps
 
@@ -88,10 +108,10 @@ the three files under `manifests/n/NachoSC/ScreenTuner/1.0.0/`.
 from it or is updated by the tool - never edit versions by hand.
 
 ```powershell
-python toolsersion.py                 # what is the current version
-python toolsersion.py --check         # verify every file agrees
-python toolsersion.py --set 1.1.0     # bump everywhere, add a CHANGELOG stub
-python toolsersion.py --tag           # annotated git tag, refuses if inconsistent
+python tools\version.py                 # what is the current version
+python tools\version.py --check         # verify every file agrees
+python tools\version.py --set 1.1.0     # bump everywhere, add a CHANGELOG stub
+python tools\version.py --tag           # annotated git tag, refuses if inconsistent
 ```
 
 `--set` updates `src/screentuner.py`, all three winget manifests, the `winget\<version>\`

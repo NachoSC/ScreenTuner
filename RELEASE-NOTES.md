@@ -1,27 +1,30 @@
-First public release.
+A small bug fix, plus a test suite. **Nothing you have configured changes** — upgrading is
+safe, and your `profiles.json` is untouched.
 
-**What it does** — digital vibrance, gamma, contrast and brightness as named profiles you
-switch with a hotkey, without leaving a game. Vibrance goes through NVIDIA's NVAPI; gamma,
-contrast and brightness go through the GDI gamma ramp and work on any GPU.
+**Fixed**
 
-**Highlights**
+- A hotkey consisting only of whitespace — `"hotkey": " "` in a hand-edited
+  `profiles.json` — was parsed as the `+` key and registered globally, so pressing `+`
+  anywhere switched profiles. It is now rejected like any other empty value.
 
-- Per-monitor overrides inside a single profile, matched by vendor, position, index or
-  EDID rather than the adapter names Windows renumbers
-- Settings window with live preview, a real transfer-curve graph drawn from the lookup
-  table that actually reaches the driver, and a vibrance colour preview
-- A watchdog that reapplies your profile when a fullscreen game takes the gamma ramp, or
-  the driver resets vibrance on a display-mode switch
-- Defaults are `Ctrl+Shift+…`: Windows reports AltGr as Ctrl+Alt, so `Ctrl+Alt` bindings
-  fire while typing on Spanish, German and most non-US layouts. If you do bind Ctrl+Alt,
-  AltGr presses are detected and ignored
-- Per-user install, no admin prompt. `--uninstall` removes every registry entry it made
+**Added, for contributors**
 
-**Install** — run the setup exe, or `winget install NachoSC.ScreenTuner`, or unzip the
-portable build anywhere.
+- A test suite under `tests/`, split by what a machine can answer rather than by test
+  size. `tests/unit/` needs nothing but Windows — no GPU, no build, no install — and
+  covers the gamma ramp maths, hotkey parsing, monitor matching, profile resolution,
+  config loading, and the privacy scrubbing on `--diagnostics`. `tests/system/` holds the
+  hardware tests that need real displays and, for vibrance, an NVIDIA card.
+- This matters for the AMD and Intel work on the roadmap: someone without an NVIDIA card
+  can now run `tests\run.bat unit` and check they have not broken anything, which was
+  previously impossible.
+
+**Upgrading** — run the new setup exe over your existing install, or
+`winget upgrade NachoSC.ScreenTuner`. Settings and profiles are preserved.
 
 **Note on SmartScreen** — the binary is not code-signed, so Windows will warn on first
 run. Click *More info → Run anyway*. The source is here and `build.bat` reproduces it.
 
-**Requires** Windows 10/11 64-bit. Vibrance needs an NVIDIA GPU; everything else works on
-AMD and Intel. AMD saturation via ADL is on the roadmap — testers welcome.
+**Requires** Windows 10/11 64-bit. Vibrance needs an NVIDIA GPU; gamma, contrast and
+brightness work on any GPU. AMD saturation via ADL is on the roadmap — testers welcome.
+
+Full detail in [CHANGELOG.md](https://github.com/NachoSC/ScreenTuner/blob/main/CHANGELOG.md).
