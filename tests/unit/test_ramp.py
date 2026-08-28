@@ -114,7 +114,13 @@ class TestPerChannel(unittest.TestCase):
                          channel(build(1.4, 60, 45)))
 
     def test_mixed_scalar_and_list(self):
-        build(1.2, [40, 50, 60], 50)      # must not raise
+        """A scalar and a 3-list in the same call: the scalar applies to all
+        three channels, the list to one each."""
+        r = build(1.2, [40, 50, 60], 50)
+        self.assertEqual(channel(r, 0), channel(build(1.2, 40, 50), 0))
+        self.assertEqual(channel(r, 1), channel(build(1.2, 50, 50), 1))
+        self.assertEqual(channel(r, 2), channel(build(1.2, 60, 50), 2))
+        self.assertNotEqual(channel(r, 0), channel(r, 2))
 
 
 if __name__ == "__main__":

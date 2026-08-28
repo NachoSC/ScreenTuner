@@ -48,7 +48,10 @@ try:
     for a, r in base.items():
         gamma._write(a, r)
     nv.unload()
-    check("unload safe with no DLL", True)
+    check("unload leaves no live function pointers",
+          nv._qi is None and not nv._fns)
+    check("unload marks the API unavailable", nv.ok is False and nv.displays == [])
+    check("calls after unload are still no-ops", nv.set_level(80) is False)
 finally:
     sp.C.WinDLL = real_windll
 

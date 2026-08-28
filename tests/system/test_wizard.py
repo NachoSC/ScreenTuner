@@ -8,7 +8,10 @@ import winreg
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-SETUP = glob.glob(os.path.join(ROOT, "dist", "installer", "*setup.exe"))[0]
+# Newest, not first: dist\installer\ accumulates one setup.exe per version built,
+# and glob order would happily hand back last release's installer.
+SETUP = max(glob.glob(os.path.join(ROOT, "dist", "installer", "*setup.exe")),
+            key=os.path.getmtime)
 APP = os.path.join(os.environ["LOCALAPPDATA"], "Programs", "ScreenTuner")
 EXE = os.path.join(APP, "ScreenTuner.exe")
 LNK_GROUP = os.path.join(os.environ["APPDATA"], "Microsoft", "Windows",

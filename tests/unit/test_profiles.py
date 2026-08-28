@@ -76,6 +76,13 @@ class TestResolveMonitors(unittest.TestCase):
         got = sp.resolve_monitors(self.mons, ["primary", "Dell", "1"])
         self.assertEqual([m.index for m in got], [1, 4])
 
+    def test_a_repeated_monitor_is_only_listed_once(self):
+        """The loop visits each monitor once, so the `m not in out` guard can
+        only earn its keep when the caller hands in a list that already repeats
+        one - which is the case this pins."""
+        got = sp.resolve_monitors(self.mons + self.mons, "primary")
+        self.assertEqual([m.index for m in got], [1])
+
     def test_unknown_keys_match_nothing(self):
         self.assertEqual(sp.resolve_monitors(self.mons, "Acer"), [])
 
