@@ -686,7 +686,9 @@ class ConfigWindow(tk.Tk):
                  "Re-apply after a resolution change or monitor hotplug"),
                 ("notify", "Show a tray notification on each switch"),
                 ("pin_tray_icon",
-                 "Pin the tray icon to the taskbar instead of the overflow menu")):
+                 "Pin the tray icon to the taskbar instead of the overflow menu"),
+                ("check_for_updates",
+                 "Check GitHub for new versions and offer to install them")):
             v = tk.BooleanVar(value=bool(s.get(key, True)))
             self.opt_vars[key] = v
             make_check(root, P, label, v, self._mark_dirty).pack(anchor="w", pady=2)

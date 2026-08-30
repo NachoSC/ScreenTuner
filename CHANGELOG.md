@@ -11,7 +11,24 @@ key being renamed — not an API change.
 
 ## Unreleased
 
+### Added
+
+- **Update notifications.** ScreenTuner checks GitHub once a day for a newer release and
+  shows a tray notification when it finds one. Clicking it, or the new tray menu entry,
+  offers to install it: the official installer is downloaded, its SHA-256 verified
+  against the digest GitHub reports, then run silently, and the app reopens with your
+  profiles intact. Portable copies are pointed at the download page instead, since they
+  cannot replace themselves while running.
+- `check_for_updates` setting, on by default, with a checkbox in Settings — Options.
+  The check is an unauthenticated GET to the public releases API and sends nothing about
+  you or your machine.
+
 ### Fixed
+
+- Running from source used `src/profiles.json` and could not find `icon.ico`, because
+  moving the sources into `src/` also moved what the app treated as its base directory.
+  Both live in the repo root, which is where a source run now looks again. Installed and
+  portable copies were never affected.
 
 - The install and wizard system tests uninstalled ScreenTuner and never put it back, so
   running the suite removed the app from the machine it was run on. Both now snapshot the

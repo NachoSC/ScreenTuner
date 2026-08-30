@@ -14,17 +14,24 @@ import ctypes as C
 import json
 import os
 import sys
+import threading
 import time
 import traceback
 from ctypes import wintypes as W
+
+import updater
 
 APP_NAME = "ScreenTuner"
 FROZEN = getattr(sys, "frozen", False)
 
 # Frozen: everything user-facing lives beside the .exe, never in PyInstaller's
 # temp extraction dir (which __file__ points at and which is deleted on exit).
+# From source: the repo root, one level above src/. That is where make_icon.py
+# writes icon.ico and where profiles.json lives - when the sources moved into
+# src/, using __file__'s own directory silently started a fresh config there
+# and stopped finding the icon.
 BASE_DIR = (os.path.dirname(os.path.abspath(sys.executable)) if FROZEN
-            else os.path.dirname(os.path.abspath(__file__)))
+            else os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DEFAULT_CONFIG = os.path.join(BASE_DIR, "profiles.json")
 
 
@@ -617,7 +624,8 @@ DEFAULT_PROFILES = {
         "pin_tray_icon": False,
         "enforce_profile": True,
         "enforce_interval_ms": 2000,
-        "vibrance_step": 5
+        "vibrance_step": 5,
+        "check_for_updates": True
     },
     "hotkeys": {
         "neutral": "ctrl+shift+0",
@@ -1009,6 +1017,24 @@ def copy_diagnostics_to_clipboard():
         return False
 
 
+MB_YESNO, MB_ICONQUESTION, MB_ICONINFORMATION = 0x0004, 0x0020, 0x0040
+MB_SETFOREGROUND = 0x00010000
+IDYES = 6
+
+user32.MessageBoxW.restype = C.c_int
+user32.MessageBoxW.argtypes = [W.HWND, W.LPCWSTR, W.LPCWSTR, C.c_uint]
+
+
+def message_box(text, title=APP_NAME, flags=MB_ICONINFORMATION):
+    """Native dialog rather than tkinter: no Tk root to build and tear down,
+    and MB_SETFOREGROUND surfaces it without making it topmost over a game."""
+    return user32.MessageBoxW(None, text, title, flags | MB_SETFOREGROUND)
+
+
+def ask_yes_no(text, title=APP_NAME):
+    return message_box(text, title, MB_YESNO | MB_ICONQUESTION) == IDYES
+
+
 def _ask_keep_settings():
     try:
         import tkinter as tk
@@ -1213,10 +1239,15 @@ WM_APP = 0x8000
 WM_TRAY = WM_APP + 1
 WM_RELOAD_REQUEST = WM_APP + 2      # posted by the settings window after a save
 WM_SHOW_SETTINGS = WM_APP + 3       # posted when the user launches a second copy
+WM_UPDATE_FOUND = WM_APP + 4        # posted by the update-check thread
+WM_UPDATE_READY = WM_APP + 5        # posted when the download finished
 SW_RESTORE = 9
 WM_TIMER = 0x0113
 TIMER_ENFORCE = 1            # periodic "is our profile still applied?" check
 TIMER_REFOCUS = 2            # one-shot, fires just after a foreground change
+TIMER_UPDATE = 3             # daily re-check for a new release
+UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000
+UPDATE_FIRST_DELAY_MS = 20 * 1000    # let startup finish before any network
 EVENT_SYSTEM_FOREGROUND = 0x0003
 WINEVENT_OUTOFCONTEXT = 0x0000
 WINEVENT_SKIPOWNPROCESS = 0x0002
@@ -1230,6 +1261,7 @@ user32.SetWinEventHook.argtypes = [W.DWORD, W.DWORD, W.HMODULE, WINEVENTPROC,
                                    W.DWORD, W.DWORD, W.DWORD]
 user32.UnhookWinEvent.argtypes = [W.HANDLE]
 WM_LBUTTONDBLCLK, WM_RBUTTONUP, WM_LBUTTONUP = 0x0203, 0x0205, 0x0202
+NIN_BALLOONUSERCLICK = 0x0405        # the user clicked the notification itself
 
 NIM_ADD, NIM_MODIFY, NIM_DELETE = 0, 1, 2
 NIF_MESSAGE, NIF_ICON, NIF_TIP, NIF_INFO = 0x01, 0x02, 0x04, 0x10
@@ -1297,6 +1329,7 @@ CMD_PIN = 905
 CMD_VIB_UP = 906
 CMD_VIB_DOWN = 907
 CMD_DIAG = 908
+CMD_UPDATE = 909
 
 # Menu id -> the same named action the hotkeys use, so both routes stay in step.
 MENU_ACTIONS = {
@@ -1309,6 +1342,7 @@ MENU_ACTIONS = {
     CMD_VIB_UP: "vibrance_up",
     CMD_VIB_DOWN: "vibrance_down",
     CMD_DIAG: "diagnostics",
+    CMD_UPDATE: "update",
 }
 
 
@@ -1329,6 +1363,8 @@ class App:
         self._expected_ramp = {}     # adapter -> ramp the driver reported back
         self._hook = None
         self._hook_proc = None
+        self.update = None           # an updater.Update once one is found
+        self._updating = False       # a download is already in flight
         self.baseline_vibrance = self.nv.snapshot()
         self.cfg = load_config(config_path)
 
@@ -1545,7 +1581,94 @@ class App:
             "startup": self.toggle_startup,
             "pin": self.toggle_pin,
             "diagnostics": self.copy_diagnostics,
+            "update": self.offer_update,
         }
+
+    # ---- updates --------------------------------------------------------
+
+    def _start_update_check(self, delay_ms=UPDATE_FIRST_DELAY_MS):
+        """Ask GitHub, off the message-loop thread, once things have settled."""
+        if not self.cfg["settings"].get("check_for_updates", True):
+            return
+        user32.SetTimer(self.hwnd, TIMER_UPDATE, delay_ms, None)
+
+    def _check_for_update(self):
+        """Runs on a worker thread - it must only post back, never touch the UI."""
+        found = updater.check(VERSION)
+        if found and self.hwnd:
+            self.update = found
+            user32.PostMessageW(self.hwnd, WM_UPDATE_FOUND, 0, 0)
+
+    def _on_update_found(self):
+        u = self.update
+        if not u:
+            return
+        log(f"  update   : {u.version} available (running {VERSION})")
+        self.notify(f"{APP_NAME} {u.version} is available",
+                    "Click here to install it, or use the tray menu.")
+
+    def offer_update(self):
+        """Ask, then install. Only ever reached from a click - never unprompted,
+        because a dialog stealing focus mid-game is exactly what this app exists
+        to stay out of the way of."""
+        u = self.update
+        if not u or self._updating:
+            return
+
+        if not FROZEN:
+            message_box(f"{APP_NAME} {u.version} is available.\n\n"
+                        "You are running from source, so update with git instead.",
+                        "Update available")
+            return
+
+        app_dir = os.path.dirname(os.path.abspath(sys.executable))
+        if not updater.installed_by_wizard(app_dir):
+            # A portable copy cannot replace itself while it is running.
+            if ask_yes_no(f"{APP_NAME} {u.version} is available.\n\n"
+                          "This is a portable copy, so it cannot update itself.\n"
+                          "Open the download page?", "Update available"):
+                try:
+                    os.startfile(updater.RELEASES_PAGE)
+                except OSError as e:
+                    log(f"  ! could not open the releases page: {e}")
+            return
+
+        mb = u.size / (1024.0 * 1024.0)
+        if not ask_yes_no(
+                f"{APP_NAME} {u.version} is available - you have {VERSION}.\n\n"
+                f"Download {mb:.1f} MB and install it now?\n"
+                f"{APP_NAME} will close and reopen. Your profiles are kept.",
+                "Update available"):
+            return
+
+        self._updating = True
+        self.notify("Downloading the update", f"{APP_NAME} {u.version}")
+        threading.Thread(target=self._download, daemon=True).start()
+
+    def _download(self):
+        """Worker thread: fetch and verify, then hand back to the message loop."""
+        path = None
+        try:
+            path = updater.download(self.update)
+        except Exception as e:
+            log(f"  ! update download failed: {e}")
+        self._update_path = path
+        if self.hwnd:
+            user32.PostMessageW(self.hwnd, WM_UPDATE_READY, 1 if path else 0, 0)
+
+    def _on_update_ready(self, ok):
+        self._updating = False
+        path = getattr(self, "_update_path", None)
+        if not ok or not path:
+            self.notify("Update failed",
+                        "Could not download or verify it. Try again later.")
+            return
+        exe = os.path.abspath(sys.executable)
+        if updater.apply_update(path, exe, log=log):
+            log("  update   : installer launched, exiting so it can replace us")
+            self.quit()
+        else:
+            self.notify("Update failed", "Could not start the installer.")
 
     def on_hotkey(self, hid):
         entry = self._hotkey_ids.get(hid)
@@ -1698,6 +1821,11 @@ class App:
             item(CMD_SETTINGS, "Settings..."),
             item(CMD_RELOAD, acc("reload", "Reload profiles.json")),
             item(CMD_DIAG, "Copy diagnostics for a bug report"),
+        ]
+        if self.update:
+            items += [None, item(CMD_UPDATE,
+                                 f"Update to {self.update.version}...")]
+        items += [
             None,
             item(CMD_STARTUP, "Start with Windows", checked=bool(startup_enabled())),
             item(CMD_PIN, "Pin icon to taskbar", checked=tray_icon_pinned()),
@@ -1770,6 +1898,8 @@ class App:
                 self.open_settings()
             elif low == WM_RBUTTONUP:
                 self.show_menu()
+            elif low == NIN_BALLOONUSERCLICK:
+                self.offer_update()
             return 0
         if msg == WM_COMMAND:
             self.on_command(wparam & 0xFFFF)
@@ -1777,6 +1907,14 @@ class App:
         if msg == WM_TIMER:
             if wparam == TIMER_REFOCUS:
                 user32.KillTimer(self.hwnd, TIMER_REFOCUS)
+            elif wparam == TIMER_UPDATE:
+                # First fire is the startup delay; re-arm at the daily rate.
+                user32.KillTimer(self.hwnd, TIMER_UPDATE)
+                user32.SetTimer(self.hwnd, TIMER_UPDATE,
+                                UPDATE_INTERVAL_MS, None)
+                threading.Thread(target=self._check_for_update,
+                                 daemon=True).start()
+                return 0
             self._enforce()
             return 0
         if msg == WM_RELOAD_REQUEST:
@@ -1784,6 +1922,12 @@ class App:
             return 0
         if msg == WM_SHOW_SETTINGS:
             self.open_settings()
+            return 0
+        if msg == WM_UPDATE_FOUND:
+            self._on_update_found()
+            return 0
+        if msg == WM_UPDATE_READY:
+            self._on_update_ready(bool(wparam))
             return 0
         if msg == WM_DISPLAYCHANGE:
             if self.cfg["settings"].get("reapply_on_display_change", True):
@@ -1841,6 +1985,8 @@ class App:
             log(f"  keep-applied: every {every} ms, and on every alt-tab")
         log("\nHotkeys:")
         self.register_hotkeys()
+
+        self._start_update_check()
 
         if layout_has_altgr():
             pairs = [(p.get("name", "?"), p["hotkey"])

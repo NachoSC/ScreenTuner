@@ -49,6 +49,12 @@ single-panel laptop are both testable from one machine. They borrow the real
 - **`test_profiles.py`** — monitor matching and profile expansion, including profiles
   that name hardware the machine does not have, which is what happens whenever people
   share settings.
+- **`test_updater.py`** — update checking, with the network injected. Pins what the
+  updater *refuses*: drafts and pre-releases, a download URL outside this repo, a
+  missing or malformed digest, and a file whose hash does not match (which must be
+  deleted rather than left somewhere it could later be run). This is the only code
+  in the app that downloads and executes something, so those rules are asserted
+  rather than assumed.
 - **`test_config.py`** — reading `profiles.json`, filling in keys added by later
   versions, and refusing to quietly overwrite a corrupt file.
 

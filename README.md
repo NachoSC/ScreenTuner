@@ -154,6 +154,30 @@ settings window: enforcement pauses while that's open.
 Borderless windowed avoids the conflict entirely. HDR does not — a monitor with HDR
 enabled ignores gamma ramps altogether, though vibrance still works.
 
+## Updates
+
+ScreenTuner checks GitHub once a day for a newer release. When one appears you get a
+tray notification; clicking it — or the **Update to x.y.z...** item in the tray menu
+— asks whether to install it.
+
+Nothing interrupts you: no dialog ever appears on its own, because this is an app you
+leave running inside a game. The notification is the only unprompted thing, and it goes
+away by itself.
+
+Say yes and it downloads the official installer, checks its SHA-256 against the digest
+GitHub reports for that file, runs it silently and reopens. **Your profiles and settings
+are kept.** A portable copy cannot replace itself while running, so it opens the download
+page instead.
+
+To turn it off: **Settings — Options — "Check GitHub for new versions"**, or set
+`"check_for_updates": false` in `profiles.json`.
+
+The check is a plain unauthenticated GET to the public releases API. Nothing about you or
+your machine is sent, and the app has no telemetry of any kind.
+
+> The installer is unsigned, so verifying the download proves it arrived intact — not
+> that the release is trustworthy. That needs code signing, which is on the roadmap.
+
 ## Requirements
 
 | | |
