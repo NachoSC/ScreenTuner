@@ -9,7 +9,7 @@ InstallModes:
   - silent
   - silentWithProgress
 UpgradeBehavior: install
-ReleaseDate: 2026-08-27
+ReleaseDate: 2026-08-30
 Installers:
   - Architecture: x64
     InstallerUrl: https://github.com/NachoSC/ScreenTuner/releases/download/v1.1.0/ScreenTuner-1.1.0-setup.exe

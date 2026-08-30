@@ -11,6 +11,7 @@ step and shouts if they have drifted.
 """
 
 import argparse
+import datetime
 import io
 import os
 import re
@@ -110,13 +111,18 @@ def set_version(new):
         if os.path.abspath(wdir) != os.path.abspath(target):
             os.rename(wdir, target)
             print(f"  winget/            {os.path.basename(wdir)} -> {new}")
-        # URLs embed the tag and the file name
+        # URLs embed the tag and the file name. ReleaseDate is not derived from
+        # anything, so without this it keeps whatever the previous release set -
+        # which it silently did, and 1.1.0's manifest went out carrying 1.0.0's
+        # date until it was spotted by hand.
+        today = datetime.date.today().isoformat()
         for f in os.listdir(target):
             p = os.path.join(target, f)
-            write(p, read(p).replace(f"/v{old}/", f"/v{new}/")
-                            .replace(f"-{old}-setup.exe", f"-{new}-setup.exe")
-                            .replace(f"/tag/v{old}", f"/tag/v{new}"))
-        print(f"  winget manifests   updated (URLs and PackageVersion)")
+            write(p, re.sub(r"ReleaseDate: \S+", f"ReleaseDate: {today}",
+                            read(p).replace(f"/v{old}/", f"/v{new}/")
+                                   .replace(f"-{old}-setup.exe", f"-{new}-setup.exe")
+                                   .replace(f"/tag/v{old}", f"/tag/v{new}")))
+        print(f"  winget manifests   updated (URLs, PackageVersion, ReleaseDate)")
 
     if os.path.exists(CHANGELOG):
         s = read(CHANGELOG)
