@@ -1,30 +1,45 @@
-A small bug fix, plus a test suite. **Nothing you have configured changes** — upgrading is
-safe, and your `profiles.json` is untouched.
+**ScreenTuner can now tell you when there is a new version, and install it for you.**
 
-**Fixed**
+This is the last update you will have to install by hand. Versions before this one have no
+way of knowing a release exists, so 1.0.x will not notify you about 1.1.0 — from here on
+it will.
 
-- A hotkey consisting only of whitespace — `"hotkey": " "` in a hand-edited
-  `profiles.json` — was parsed as the `+` key and registered globally, so pressing `+`
-  anywhere switched profiles. It is now rejected like any other empty value.
+**How it works**
 
-**Added, for contributors**
+- Once a day, ScreenTuner asks GitHub whether there is a newer release.
+- If there is, you get a tray notification. Click it, or the new **Update to x.y.z…**
+  entry in the tray menu, and it asks whether to install.
+- Say yes and it downloads the official installer, checks its SHA-256 against the digest
+  GitHub reports for that exact file, runs it silently, and reopens. **Your profiles and
+  settings are kept.**
 
-- A test suite under `tests/`, split by what a machine can answer rather than by test
-  size. `tests/unit/` needs nothing but Windows — no GPU, no build, no install — and
-  covers the gamma ramp maths, hotkey parsing, monitor matching, profile resolution,
-  config loading, and the privacy scrubbing on `--diagnostics`. `tests/system/` holds the
-  hardware tests that need real displays and, for vibrance, an NVIDIA card.
-- This matters for the AMD and Intel work on the roadmap: someone without an NVIDIA card
-  can now run `tests\run.bat unit` and check they have not broken anything, which was
-  previously impossible.
+Nothing interrupts you. No dialog ever appears on its own — this is an app you leave
+running inside a game, so the notification is the only unprompted thing, and it goes away
+by itself. Every dialog is reached from a click.
 
-**Upgrading** — run the new setup exe over your existing install, or
+**Turning it off** — Settings → Options → *"Check GitHub for new versions"*, or
+`"check_for_updates": false` in `profiles.json`. The check is an unauthenticated GET to
+the public releases API: nothing about you or your machine is sent, and the app still has
+no telemetry of any kind.
+
+**A portable copy** cannot replace itself while it is running, so it opens the download
+page instead.
+
+**Also fixed**
+
+- Running from a source checkout looked for `profiles.json` and `icon.ico` in the wrong
+  place after the sources moved into `src/`. Installed and portable copies were never
+  affected.
+
+**Upgrading** — run the setup exe over your existing install, or
 `winget upgrade NachoSC.ScreenTuner`. Settings and profiles are preserved.
 
 **Note on SmartScreen** — the binary is not code-signed, so Windows will warn on first
-run. Click *More info → Run anyway*. The source is here and `build.bat` reproduces it.
+run. Click *More info → Run anyway*. Verifying the download proves it arrived intact, not
+that the release is trustworthy; that needs code signing, which is on the roadmap.
 
 **Requires** Windows 10/11 64-bit. Vibrance needs an NVIDIA GPU; gamma, contrast and
-brightness work on any GPU. AMD saturation via ADL is on the roadmap — testers welcome.
+brightness work on any GPU. AMD and Intel saturation is the next roadmap item — testers
+welcome.
 
 Full detail in [CHANGELOG.md](https://github.com/NachoSC/ScreenTuner/blob/main/CHANGELOG.md).

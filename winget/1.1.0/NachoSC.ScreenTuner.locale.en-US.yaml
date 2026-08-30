@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
 PackageIdentifier: NachoSC.ScreenTuner
-PackageVersion: 1.0.1
+PackageVersion: 1.1.0
 PackageLocale: en-US
 Publisher: NachoSC
 PublisherUrl: https://github.com/NachoSC
@@ -27,6 +27,6 @@ Tags:
   - nvidia
   - saturation
   - vibrance
-ReleaseNotesUrl: https://github.com/NachoSC/ScreenTuner/releases/tag/v1.0.1
+ReleaseNotesUrl: https://github.com/NachoSC/ScreenTuner/releases/tag/v1.1.0
 ManifestType: defaultLocale
 ManifestVersion: 1.6.0

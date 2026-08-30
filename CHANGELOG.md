@@ -9,7 +9,12 @@ key being renamed — not an API change.
 
 <!-- next -->
 
-## Unreleased
+## 1.1.0 - 2026-08-30
+
+Update notifications. From this release on, ScreenTuner tells you when a new
+version is out and offers to install it - which matters most for what comes
+next, since the roadmap work will otherwise reach nobody who is not watching
+the repository.
 
 ### Added
 
