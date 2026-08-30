@@ -19,6 +19,9 @@ key being renamed — not an API change.
   against the digest GitHub reports, then run silently, and the app reopens with your
   profiles intact. Portable copies are pointed at the download page instead, since they
   cannot replace themselves while running.
+- `tests/system/test_update.py`, which checks the live GitHub API still reports what
+  the updater needs. If the per-asset digest ever disappeared, updates would stop
+  being offered with nothing in the log to explain why.
 - `check_for_updates` setting, on by default, with a checkbox in Settings — Options.
   The check is an unauthenticated GET to the public releases API and sends nothing about
   you or your machine.

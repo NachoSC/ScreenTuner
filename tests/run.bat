@@ -59,6 +59,7 @@ if not exist "dist\ScreenTuner\ScreenTuner.exe" (
     call :run tests\system\test_gui_logic.py
     call :run tests\system\test_permonitor.py
     call :run tests\system\test_click.py
+    call :run tests\system\test_update.py
     goto :done
 )
 
@@ -67,6 +68,7 @@ call :run tests\system\test_portability.py
 call :run tests\system\test_menu.py
 call :run tests\system\test_gui_logic.py
 call :run tests\system\test_permonitor.py
+call :run tests\system\test_update.py
 call :run tests\system\test_exe.py
 call :run tests\system\test_enforce.py
 call :run tests\system\test_click.py

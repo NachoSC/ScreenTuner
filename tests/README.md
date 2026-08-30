@@ -73,11 +73,37 @@ reason the app works; they just cannot run anywhere but a real desktop.
 | `test_enforce.py` | The watchdog takes the gamma ramp back after a fullscreen game steals it |
 | `test_click.py` | Left-click opens Settings, right-click opens the menu |
 | `test_altgr.py` | Real Ctrl+Alt fires; AltGr does not |
+| `test_update.py` | The live GitHub API still reports what the updater needs, and a tampered download is refused |
 | `test_install.py` | `--install` then `--uninstall` leaves no files or registry entries |
 | `test_wizard.py` | The same, through the Inno installer, silently |
 
 They are unavoidably order-dependent and share the display, so `run.bat` runs them in
 sequence — cheapest first, the two that install software last.
+
+### Proving the whole update path
+
+`test_update.py` covers the check and the download, and the unit tests cover every
+decision the updater makes. What neither can cover is the handover itself — downloading,
+exiting, letting the installer replace the running app, and coming back — because that
+needs a build that believes it is older than the latest release.
+
+That was done by hand before the feature shipped, and is worth repeating whenever the
+installer or the update code changes:
+
+1. Temporarily set `VERSION = "1.0.0"` in `src/screentuner.py`.
+2. `build.bat`, then compile the installer directly with Inno:
+   `ISCC /Q /DAppVersion=1.0.0 installer\ScreenTuner.iss`
+   (not `build-installer.bat` — it runs `--check`, which will rightly refuse a source
+   version that disagrees with the manifests).
+3. Put `VERSION` back straight away, and move the old installer out of
+   `dist\installer\` so nothing else picks it up.
+4. Install the old build, run it, and wait. It should notice the newer release about
+   20 seconds in, notify, and only then — on a click — ask.
+5. Say yes. Within about ten seconds the old copy should exit, the installer run
+   silently, and the app reappear on the new version with profiles intact.
+
+Measured on the 1.0.0 to 1.0.1 run: noticed after 20.5 s, old copy exited in 0.8 s,
+back up 6.6 s later.
 
 ### They put your install back
 
